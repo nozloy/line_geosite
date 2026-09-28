@@ -46,8 +46,21 @@ gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
   --draft --title "Domain lists $tag" --notes-file "$temporary/notes.md" "${assets[@]}"
 
 # Confirm the draft contains the exact verified artifacts before making it public.
-gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir "$temporary/download" \
-  --pattern 'geosite_line.*'
+# A failed batch can leave partial files. Retry this read with --clobber so every
+# file is downloaded again; never skip a partial file or retry release mutations.
+for attempt in 1 2 3 4; do
+  if gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir "$temporary/download" \
+    --pattern 'geosite_line.*' --clobber; then
+    break
+  fi
+  if [[ "$attempt" == 4 ]]; then
+    echo 'Release verification download failed after 4 attempts; Latest is unchanged.' >&2
+    exit 1
+  fi
+  delay=$((2 ** attempt))
+  printf 'Download attempt %s/4 failed; retrying in %s seconds.\n' "$attempt" "$delay" >&2
+  sleep "$delay"
+done
 for asset in "${assets[@]}"; do
   cmp -- "$asset" "$temporary/download/$asset"
 done
