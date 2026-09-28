@@ -56,7 +56,7 @@ def verify_mrs_matching(output: Path, domains: list[str]) -> None:
                 listener.bind(("127.0.0.1", 0))
                 port = listener.getsockname()[1]
             config = {
-                "mixed-port": port, "allow-lan": False, "bind-address": "127.0.0.1",
+                "mode": "rule", "mixed-port": port, "allow-lan": False, "bind-address": "127.0.0.1",
                 "hosts": {domain: "127.0.0.1" for domain in cases},
                 "proxies": [{"name": "matched", "type": "http", "server": "127.0.0.1",
                              "port": servers[1].server_port}],
@@ -86,7 +86,9 @@ def verify_mrs_matching(output: Path, domains: list[str]) -> None:
                         response = client.getresponse()
                         actual = response.read().decode()
                         if response.status != 200 or actual != expected:
-                            raise ValueError(f"MRS boundary mismatch for {domain}: {actual}")
+                            log.seek(0)
+                            raise ValueError(f"MRS boundary mismatch for {domain}: HTTP {response.status} "
+                                             f"{actual!r}, expected {expected}\n{log.read()}")
                     finally:
                         client.close()
                 process.terminate()
