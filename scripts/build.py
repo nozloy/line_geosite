@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and verify both formats before exposing any release artifacts."""
+"""Build and verify all formats before exposing any release artifacts."""
 
 import argparse
 import json
@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from domain_rules import read_domains, source_rules, verify_dat_dump, verify_srs_dump
+from domain_rules import read_domains, source_rules, verify_dat_dump, verify_srs_dump, verify_mrs_dump
 from pinned_tools import ROOT, TOOLCHAINS, download_tool, sha256
 
 
@@ -28,7 +28,7 @@ def build(source: Path, output: Path) -> None:
         work = Path(directory)
         input_dir = work / "data"
         input_dir.mkdir()
-        # A validated snapshot guarantees that both formats use identical input.
+        # A validated snapshot guarantees that all formats use identical input.
         (input_dir / "line").write_text("".join(f"domain:{d}\n" for d in domains))
         rules_json = work / "line.json"
         rules_json.write_text(json.dumps(source_rules(domains), indent=2) + "\n")
@@ -55,17 +55,26 @@ def build(source: Path, output: Path) -> None:
         subprocess.run([sing_box, "rule-set", "decompile", "--output", str(decoded), str(srs)], check=True)
         verify_srs_dump(decoded, domains)
 
-        for extension in ("dat", "srs"):
+        mihomo = str(download_tool("mihomo"))
+        domain_text = work / "line.txt"
+        domain_text.write_text("".join(f"+.{domain}\n" for domain in domains))
+        mrs = work / "geosite_line.mrs"
+        subprocess.run([mihomo, "convert-ruleset", "domain", "text", str(domain_text), str(mrs)], check=True)
+        decoded_mrs = work / "decoded-mrs.txt"
+        subprocess.run([mihomo, "convert-ruleset", "domain", "mrs", str(mrs), str(decoded_mrs)], check=True)
+        verify_mrs_dump(decoded_mrs, domains)
+
+        for extension in ("dat", "srs", "mrs"):
             artifact = work / f"geosite_line.{extension}"
             if not artifact.stat().st_size:
                 raise ValueError(f"Empty artifact: {artifact.name}")
             (work / f"{artifact.name}.sha256sum").write_text(f"{sha256(artifact)}  {artifact.name}\n")
         output.mkdir(parents=True, exist_ok=True)
-        for extension in ("dat", "srs"):
+        for extension in ("dat", "srs", "mrs"):
             for suffix in ("", ".sha256sum"):
                 name = f"geosite_line.{extension}{suffix}"
                 shutil.copyfile(work / name, output / name)
-    print(f"Verified {len(domains)} domains in DAT and SRS: {output}")
+    print(f"Verified {len(domains)} domains in DAT, SRS and MRS: {output}")
 
 
 def main() -> None:

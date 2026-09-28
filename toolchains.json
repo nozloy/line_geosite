@@ -15,6 +15,21 @@
       }
     }
   },
+  "mihomo": {
+    "version": "1.19.31",
+    "repository": "MetaCubeX/mihomo",
+    "binary": "mihomo",
+    "assets": {
+      "Darwin-arm64": {
+        "name": "mihomo-darwin-arm64-v1.19.31.gz",
+        "sha256": "d131f44b3deb2a8356f7ac75048ad67a10d53243323951c4f3cda7b672922963"
+      },
+      "Linux-x86_64": {
+        "name": "mihomo-linux-amd64-v1.19.31.gz",
+        "sha256": "d5e74bbddbdfff49a1aef7775bf5911da59f0d7196ed509a0ac914b3653dd5f1"
+      }
+    }
+  },
   "xray": {
     "version": "26.3.27",
     "repository": "XTLS/Xray-core",

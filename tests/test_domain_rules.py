@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from domain_rules import read_domains, verify_dat_dump, verify_srs_dump
+from domain_rules import read_domains, verify_dat_dump, verify_srs_dump, verify_mrs_dump
 
 
 class DomainRulesTest(unittest.TestCase):
@@ -44,6 +44,15 @@ class DomainRulesTest(unittest.TestCase):
                 self.path.write_text(invalid)
                 with self.assertRaises(ValueError):
                     verify_dat_dump(self.path, ["asos.com"])
+
+    def test_mrs_requires_root_and_subdomains_without_extra_entries(self):
+        self.path.write_text("+.asos.com\n")
+        verify_mrs_dump(self.path, ["asos.com"])
+        for invalid in ("", "asos.com\n", "*.asos.com\n", "+.example.com\n", "+.asos.com\n+.extra.com\n", "+.asos.com\n+.asos.com\n"):
+            with self.subTest(invalid=invalid):
+                self.path.write_text(invalid)
+                with self.assertRaises(ValueError):
+                    verify_mrs_dump(self.path, ["asos.com"])
 
     def test_srs_requires_domain_suffix_and_compatible_version(self):
         valid = {"version": 2, "rules": [{"domain_suffix": ["asos.com"]}]}

@@ -46,6 +46,10 @@ elif args[:2] == ["release", "download"]:
         shutil.copyfile(source, destination / source.name)
     if mode == "corrupt-upload":
         (destination / "geosite_line.dat").write_bytes(b"broken")
+    if mode == "corrupt-mrs":
+        (destination / "geosite_line.mrs").write_bytes(b"broken")
+    if mode == "missing-mrs":
+        (destination / "geosite_line.mrs").unlink()
 '''
 
 
@@ -57,6 +61,7 @@ class PublicationTest(unittest.TestCase):
             "upload-error": (1, False, 0), "download-error": (1, False, 4),
             "corrupt-upload": (1, False, 1), "transient-download": (0, True, 2),
             "partial-download": (0, True, 2), "new-push-after-retry": (0, False, 2),
+            "corrupt-mrs": (1, False, 1), "missing-mrs": (2, False, 1),
         }
         for mode, (expected_code, publishes, downloads) in scenarios.items():
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
@@ -72,7 +77,7 @@ class PublicationTest(unittest.TestCase):
                 (root / "gh").chmod(0o755)
                 (root / "sleep").write_text('#!/bin/sh\nprintf "%s\\n" "$1" >> "$FAKE_SLEEP_LOG"\n')
                 (root / "sleep").chmod(0o755)
-                for extension in ("dat", "srs"):
+                for extension in ("dat", "srs", "mrs"):
                     name = f"geosite_line.{extension}"
                     payload = extension.encode()
                     (root / "dist" / name).write_bytes(payload)
@@ -95,6 +100,9 @@ class PublicationTest(unittest.TestCase):
                 self.assertEqual(result.returncode, expected_code, result.stdout + result.stderr)
                 self.assertEqual("release edit" in log.read_text(), publishes)
                 self.assertEqual(log.read_text().count("release download "), downloads)
+                if publishes:
+                    self.assertIn("geosite_line.mrs geosite_line.mrs.sha256sum", log.read_text())
+                    self.assertIn("geosite_line.mrs", (root / "summary").read_text())
                 delays = sleep_log.read_text().splitlines() if sleep_log.exists() else []
                 self.assertEqual(delays, [str(2 ** attempt) for attempt in range(1, downloads)])
 

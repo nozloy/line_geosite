@@ -1,15 +1,17 @@
 # Проект Линия — списки доменов
 
-Один список `data/line` автоматически собирается в два формата:
+Один список `data/line` автоматически собирается в три формата:
 
 | Назначение | Постоянная ссылка |
 | --- | --- |
 | Xray / 3x-ui, категория `line` | [geosite_line.dat](https://github.com/nozloy/line_geosite/releases/latest/download/geosite_line.dat) |
 | sing-box / OpenWrt, бинарный rule-set | [geosite_line.srs](https://github.com/nozloy/line_geosite/releases/latest/download/geosite_line.srs) |
+| Mihomo / Clash Mi, доменный rule-set | [geosite_line.mrs](https://github.com/nozloy/line_geosite/releases/latest/download/geosite_line.mrs) |
 | Контрольная сумма DAT | [geosite_line.dat.sha256sum](https://github.com/nozloy/line_geosite/releases/latest/download/geosite_line.dat.sha256sum) |
 | Контрольная сумма SRS | [geosite_line.srs.sha256sum](https://github.com/nozloy/line_geosite/releases/latest/download/geosite_line.srs.sha256sum) |
+| Контрольная сумма MRS | [geosite_line.mrs.sha256sum](https://github.com/nozloy/line_geosite/releases/latest/download/geosite_line.mrs.sha256sum) |
 
-Оба файла охватывают каждый указанный домен и все его поддомены. Например,
+Все три файла охватывают каждый указанный домен и все его поддомены. Например,
 `asos.com` и `www.asos.com` входят в список, а `notasos.com` — нет.
 В список входят только адреса из `data/line`; внешние каталоги доменов не добавляются.
 Связанные CDN, платёжные и другие сторонние домены автоматически не включаются.
@@ -21,12 +23,12 @@
 Для IDN используйте punycode. Пустые строки и комментарии после `#` разрешены.
 Дубликаты и поддомены уже внесённого родительского домена нужно удалить.
 
-После push в `main` GitHub Actions проверяет список, собирает оба файла и публикует
+После push в `main` GitHub Actions проверяет список, собирает три файла и публикует
 новый релиз. Ссылки выше остаются прежними. Pull request запускает только проверки;
 ручной запуск доступен в Actions → Build and publish domain lists → Run workflow.
 
 Релиз сначала создаётся как черновик. Он становится Latest после загрузки и
-побайтовой проверки всех четырёх файлов. Если скачивание черновика для проверки
+побайтовой проверки всех шести файлов. Если скачивание черновика для проверки
 завершилось ошибкой GitHub, выполняются до четырёх попыток с паузами 2, 4 и 8 секунд.
 Незавершённые скачивания перезаписываются и проверяются заново.
 Ошибка сборки или загрузки сохраняет
@@ -112,6 +114,27 @@
 Документация: [rule-set](https://sing-box.sagernet.org/configuration/rule-set/),
 [версии SRS](https://sing-box.sagernet.org/configuration/rule-set/source-format/).
 
+## Mihomo / Clash Mi
+
+Добавьте HTTP rule-provider в существующую конфигурацию:
+
+```yaml
+rule-providers:
+  line:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://github.com/nozloy/line_geosite/releases/latest/download/geosite_line.mrs
+    path: ./ruleset/line.mrs
+    interval: 86400
+```
+
+Перед завершающим правилом добавьте `RULE-SET,line,AUTO`, где `AUTO` — существующая
+группа VPN. Клиент проверяет обновления раз в сутки при работающем ядре и доступном
+источнике. Изменения в `data/line` попадают в MRS после успешной публикации релиза.
+При ошибке обновления Mihomo продолжает использовать ранее загруженные правила.
+Подключение MRS не заменяет системную базу GeoSite приложения.
+
 ## Локальная сборка и проверки
 
 Требуются Go **1.25.12**, Python **3.11+**, Bash и доступ к GitHub/Go Modules.
@@ -123,11 +146,13 @@ python3 scripts/build.py
 python3 scripts/verify.py
 ```
 
-Сборка создаёт четыре файла в `dist/`. Проверки включают чтение DAT штатным
+Сборка создаёт шесть файлов в `dist/`. Проверки включают чтение DAT штатным
 `datdump`, декомпиляцию SRS с проверкой полного списка и версии, проверку совпадений
 для доменов/поддоменов и отказа для похожих посторонних имён, повторяемость
-обоих форматов, отказ для пустого/некорректного ввода и загрузку категории
-реальным Xray через `run -test` без запуска сервера. Публикация отдельно проверяется
+всех трёх форматов, декомпиляцию MRS с проверкой полного списка, отказ для
+пустого/некорректного ввода и загрузку категории реальным Xray через `run -test`.
+Mihomo дополнительно проверяет границы доменов через локальные HTTP endpoints;
+тест не меняет системный proxy и не обращается к самим доменам. Публикация отдельно проверяется
 с подменой GitHub CLI, без сетевых записей.
 
 Дополнительные параметры: `python3 scripts/build.py --source data/line --output dist`.

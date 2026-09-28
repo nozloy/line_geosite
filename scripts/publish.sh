@@ -23,7 +23,7 @@ fi
 root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root/dist"
 assets=()
-for extension in dat srs; do
+for extension in dat srs mrs; do
   name="geosite_line.$extension"
   test -s "$name"
   sha256sum --check "$name.sha256sum"
@@ -38,8 +38,9 @@ Domain lists built from commit $GITHUB_SHA.
 
 - Xray / 3x-ui: geosite_line.dat, category line.
 - sing-box / OpenWrt: geosite_line.srs, binary rule-set version 2 (sing-box 1.10+).
-- Both files cover the same root domains and their subdomains.
-- SHA-256 checksums are included for both files.
+- Mihomo / Clash Mi: geosite_line.mrs, behavior domain, format mrs.
+- All three files cover the same root domains and their subdomains.
+- SHA-256 checksums are included for all three files.
 EOF
 
 gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
@@ -73,7 +74,7 @@ fi
 gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
-  for extension in dat srs; do
+  for extension in dat srs mrs; do
     printf '[geosite_line.%s](https://github.com/%s/releases/latest/download/geosite_line.%s)\n\n' \
       "$extension" "$GITHUB_REPOSITORY" "$extension" >> "$GITHUB_STEP_SUMMARY"
   done

@@ -1,5 +1,6 @@
 """Download official CLI archives with pinned versions and SHA-256 digests."""
 
+import gzip
 import hashlib
 import json
 import platform
@@ -48,7 +49,10 @@ def download_tool(name: str) -> Path:
 
     # Extract only the executable; archive paths never become destination paths.
     executable = cache / tool["binary"]
-    if zipfile.is_zipfile(archive):
+    if archive.name.endswith(".gz") and not archive.name.endswith(".tar.gz"):
+        with gzip.open(archive, "rb") as source, executable.open("wb") as target:
+            shutil.copyfileobj(source, target)
+    elif zipfile.is_zipfile(archive):
         with zipfile.ZipFile(archive) as bundle:
             members = [entry for entry in bundle.infolist() if Path(entry.filename).name == tool["binary"]]
             if len(members) != 1 or members[0].is_dir():

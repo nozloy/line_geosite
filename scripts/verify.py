@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Integration checks using real compilers and Xray, without starting a server."""
+"""Integration checks using real compilers, Xray and loopback-only Mihomo."""
 
 import json
 import os
@@ -9,6 +9,7 @@ from pathlib import Path
 
 from build import build
 from domain_rules import read_domains
+from mihomo_check import verify_mrs_matching
 from pinned_tools import ROOT, download_tool, sha256
 
 
@@ -36,6 +37,7 @@ def main() -> None:
     output = ROOT / "dist"
     build(ROOT / "data" / "line", output)
     verify_srs_matching(output)
+    verify_mrs_matching(output, read_domains(ROOT / "data" / "line"))
     with tempfile.TemporaryDirectory(prefix="verify-", dir=ROOT / ".cache") as directory:
         work = Path(directory)
         repeated = work / "repeated"
@@ -72,7 +74,7 @@ def main() -> None:
         config_path.write_text(json.dumps(config))
         if subprocess.run(command, env=environment, capture_output=True).returncode == 0:
             raise ValueError("Xray accepted a missing category; the smoke test is ineffective")
-    print("Integration checks passed: reproducibility, domain boundaries, invalid inputs and Xray loading")
+    print("Integration checks passed: reproducibility, domain boundaries, invalid inputs, Xray and Mihomo")
 
 
 if __name__ == "__main__":

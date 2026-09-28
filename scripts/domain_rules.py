@@ -1,4 +1,4 @@
-"""One domain source for Xray GeoSite and sing-box rule-sets."""
+"""One domain source for Xray GeoSite, sing-box and Mihomo rule-sets."""
 
 import json
 import re
@@ -65,3 +65,9 @@ def verify_srs_dump(path: Path, domains: list[str]) -> None:
     rule = actual["rules"][0]
     if set(rule) != {"domain_suffix"} or sorted(rule["domain_suffix"]) != domains:
         raise ValueError("SRS domain_suffix rules differ from the source list")
+
+
+def verify_mrs_dump(path: Path, domains: list[str]) -> None:
+    # '+.' includes the root and subdomains; an exact domain or '*.' does not.
+    if sorted(path.read_text(encoding="utf-8").splitlines()) != [f"+.{domain}" for domain in domains]:
+        raise ValueError("MRS domain suffix rules differ from the source list")
