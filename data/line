@@ -25,3 +25,7 @@ domain:setup.workos.com
 domain:images.workoscdn.com
 domain:workos.imgix.net
 domain:challenges.cloudflare.com
+
+# Apple
+guzzoni.apple.com
+smoot.apple.com
