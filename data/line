@@ -29,3 +29,22 @@ domain:challenges.cloudflare.com
 # Apple
 guzzoni.apple.com
 smoot.apple.com
+
+# YouTube
+domain:youtube.com
+domain:youtu.be
+domain:yt.be
+domain:youtube-nocookie.com
+domain:youtubekids.com
+domain:googlevideo.com
+domain:ytimg.com
+domain:ggpht.com
+domain:yt3.googleusercontent.com
+domain:youtubei.googleapis.com
+domain:youtube.googleapis.com
+domain:youtubeembeddedplayer.googleapis.com
+domain:jnn-pa.googleapis.com
+domain:youtube-ui.l.google.com
+domain:wide-youtube.l.google.com
+domain:ytimg.l.google.com
+domain:yt-video-upload.l.google.com
