@@ -27,8 +27,8 @@ domain:workos.imgix.net
 domain:challenges.cloudflare.com
 
 # Apple
-guzzoni.apple.com
-smoot.apple.com
+domain:guzzoni.apple.com
+domain:smoot.apple.com
 
 # YouTube
 domain:youtube.com
