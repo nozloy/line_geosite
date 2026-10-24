@@ -29,3 +29,6 @@ domain:challenges.cloudflare.com
 # Apple
 domain:guzzoni.apple.com
 domain:smoot.apple.com
+
+# hCaptcha
+domain:hcaptcha.com
