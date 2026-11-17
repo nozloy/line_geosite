@@ -7,6 +7,7 @@ domain:bestsecret.com
 domain:otto.de
 domain:bonprix.de
 domain:lego.com
+domain:mcdonalds.com
 
 # Logitech
 domain:logitech.io
@@ -32,3 +33,6 @@ domain:smoot.apple.com
 
 # hCaptcha
 domain:hcaptcha.com
+
+# Games
+domain:raider.io
